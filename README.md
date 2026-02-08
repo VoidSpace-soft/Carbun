@@ -1,9 +1,9 @@
 ## What is Carbun?
-Carbun is a kind of low level compiled programming langauge made using python. it currently supports x86_64 linux. It is fully opensource. <br>
+Carbun is a kind of low level compiled programming language made using python. it currently supports x86_64 linux. It is fully opensource. <br>
 
 ## Syntax
 ### Basics
-Carbun has very simple syntax. the carbun file can have anyy extension. when compiling for OS level there must be a mandatory main subroutine like this: <br>
+Carbun has very simple syntax. the carbun file can have any extension. when compiling for OS level there must be a mandatory main subroutine like this: <br>
 ```
 sub main
   asm nop
@@ -96,7 +96,7 @@ While loops are defined using `while` command. with syntax `while <val1> <op> <v
 var x
 
 sub main
-  while x != "exit":
+  while x != "exit"
     echo bytes "> "
     read_bytes_trim *x 10
   end while
@@ -110,7 +110,7 @@ sub mysub
   asm nop
 end sub
 ```
-to exit a subroutine mid way you can us `end sub`, to exit while returning a vlue you can use `return <val>`, and you can use `lastret <var>` to store that value to a variable. example: <br>
+to exit a subroutine mid way you can use `end sub`, to exit while returning a value you can use `return <val>`, and you can use `lastret <var>` to store that value to a variable. example: <br>
 ```
 sub test
   return "hi"
