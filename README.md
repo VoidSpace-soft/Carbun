@@ -45,7 +45,7 @@ sub main
 end sub
 ```
 
-the `nl` command prints a newline.
+the `nl` command prints a newline. <br>
 
 ### Variables
 There are 3 types of variables: quadword, bytes and arrays.<br>
@@ -63,10 +63,10 @@ sub main
 end sub
 ```
 some libraries: <br>
-`ioutils.l`: gives I/O helpers like `print_uint <val>`, `print_uint_w0 <val>` and `read_bytes_trim *<varname> <byte-to-trim>`.
-`byteutils.l`: gives functions for arrays like `push *<array-name> <index> <byte>` and others.
-`bareutils.l`: gives VGA Write function, still under testing.
-`mathutils.l`: gives functions like `sqr *<result-var> <value>`, `cube *<result-var> <value>` and `mean *<result-name> *<array-name> <num-of-observations>`
+`ioutils.l`: gives I/O helpers like `print_uint <val>`, `print_uint_w0 <val>` and `read_bytes_trim *<varname> <byte-to-trim>`. <br>
+`byteutils.l`: gives functions for arrays like `push *<array-name> <index> <byte>` and others. <br>
+`bareutils.l`: gives VGA Write function, still under testing. <br>
+`mathutils.l`: gives functions like `sqr *<result-var> <value>`, `cube *<result-var> <value>` and `mean *<result-name> *<array-name> <num-of-observations>`. <br>
 
 ### If condition
 If conditions use the `if` command in carbun. you can use them like this:
