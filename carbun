@@ -1,0 +1,781 @@
+#!/usr/bin/env python3
+import sys
+import os
+import ast
+
+def string_to_hex_chunks(s: str, csize=4):
+    """
+    Convert a string into a list of 4-byte (32-bit) hex values.
+    Pads the last chunk with zeros if needed.
+    """
+    # Encode string to bytes
+    b = s.replace("\\n", "\x0A").encode('utf-8')
+    chunks = []
+
+    # Process 4 bytes at a time
+    for i in range(0, len(b), csize):
+        chunk = b[i:i+csize]  # get up to 4 bytes
+        # Pad with zeros if less than 4 bytes
+        while len(chunk) < csize:
+            chunk += b'\x00'
+        # Convert to integer (little-endian)
+        hex_val = int.from_bytes(chunk, byteorder='little')
+        chunks.append((hex_val, len(chunk)))
+
+    return chunks
+
+def intable(v) -> bool:
+    try:
+        int(v)
+        return True
+    except:
+        return False
+
+result = ""
+vardata = """"""
+ifs = """"""
+
+inif = False
+ifnol = [0 for i in range(10)]
+ifno = 0
+cif = 0
+subs = {}
+variables = {
+    "tempv0":("[tempv0]", "tempv0", 8),
+    "tempv1":("[tempv1]", "tempv1", 8),
+    "tempv2":("[tempv2]", "tempv2", 8),
+    "tempv3":("[tempv3]", "tempv3", 8),
+    "tempv4":("[tempv4]", "tempv4", 8)
+}
+tno = 0
+
+if len(sys.argv) < 2:
+    print("usage compile <file> <subcommand/output>")
+    sys.exit(0)
+elif sys.argv[1] == "--version":
+    print("Carbun v1.0ler-bb.")
+    print("Under testing, unstable")
+    sys.exit(0)
+
+file = sys.argv[1]
+ofile = sys.argv[2]
+fl = open(file, 'r').read()
+nfl = ""
+
+for line in fl.split("\n"):
+    parts = line.split()
+    if not parts:
+        continue
+    cmd = parts[0]
+    if cmd[0] == "#":
+        cmd = cmd[1:]
+        if not cmd:
+            continue
+        if cmd == "using":
+            fil = parts[1]
+            if fil[0] == '"' and fil[-1] == '"':
+                fil = fil[1:]
+                fil = fil[:-1]
+                with open(fil, 'r') as fn:
+                    nfl += f"""
+{fn.read()}
+"""
+            elif fil[0] == '<' and fil[-1] == '>':
+                fil = fil[1:]
+                fil = fil[:-1]
+                fil = "/usr/local/lib/carbunlibs/"+fil
+                fi = ast.literal_eval(open(fil, 'r').read())
+                result += f"""
+{fi["code"]}
+"""
+                for sub in fi["subs"]:
+                    subs[sub] = fi["subs"][sub]
+                for var in fi["vars"]:
+                    if not var in variables.keys():
+                        variables[var] = fi["vars"][var]
+                vardata += fi["vardata"]
+                ifno = fi["ifno"]
+
+fl = nfl+fl
+
+for line in fl.split("\n"):
+        parts = line.split()
+        if not parts:
+            continue
+        if line[0] == "#":
+            continue
+        cmd = parts[0]
+        cresult = ""
+        if cmd == "sub":
+            if parts[1] == "_start":
+                raise RuntimeError("Reserver function name")
+            cresult += f"{parts[1]}:"
+            subs[parts[1]] = []
+            if len(parts) >= 3:
+                subs[parts[1]].append("[pa]")
+                variables[parts[2]] = ("[pa]", "pa", 8)
+            if len(parts) >= 4:
+                subs[parts[1]].append("[pb]")
+                variables[parts[3]] = ("[pb]", "pb", 8)
+            if len(parts) >= 5:
+                subs[parts[1]].append("[pc]")
+                variables[parts[4]] = ("[pc]", "pc", 8)
+            if len(parts) == 6:
+                subs[parts[1]].append("[pd]")
+                variables[parts[5]] = ("[pd]", "pd", 8)
+        elif cmd == "var":
+            m = False
+            n = 0
+            l = ""
+            if len(parts) >= 3:
+                if parts[2][0] == "[" and parts[2][-1] == "]":
+                    m = True
+                    l = parts[2][1:]
+                    l = l[:-1]
+                    n = int(l)
+            if (not parts[1] in variables) and (not m):
+                vardata += f"""
+    {parts[1]}_v dq 0x{"00"*8}
+"""
+                variables[parts[1]] = (f"[{parts[1]}_v]", parts[1]+"_v", 8)
+            elif m:
+                vardata += f"""
+    {parts[1]}_a dq 0x{"00"*n}
+"""
+                variables[parts[1]] = (f"[{parts[1]}_a]", parts[1]+"_a", 8)
+        elif cmd == "byte":
+            if not parts[1] in variables:
+                vardata += f"""
+    {parts[1]}_b dq 0x{"00"*1}
+"""
+                variables[parts[1]] = (f"[{parts[1]}_b]", parts[1]+"_b", 1)
+
+        elif cmd == "setstr":
+            val = ' '.join(parts[2:])
+            if not val[0] == '"' and val[-1] == '"':
+                raise SyntaxError("setstr requires quoted string")
+            else:
+                val = val[1:]
+                val = val[:-1]
+            print(len(val))
+            string = (string_to_hex_chunks(val, len(val))[0], 0)
+            var = parts[1]
+            cresult += f"""
+mov rax, {string[0][0]}
+mov qword {variables[var][0]}, rax
+"""
+        elif cmd == "trim":
+            var = parts[1]
+            value = parts[2]
+            val = 0
+            if value in variables.keys():
+                val = variables[value][0]
+            else:
+                val = hex(int(value))
+            size = variables[var][2]  # number of bytes in the variable
+            cresult += f"""
+; trim newline from {var}
+lea rsi, {variables[var][0]}
+mov rcx, {size}
+trim_loop_{var}{tno}:
+mov al, [rsi]
+mov rbx, {val}
+cmp al, bl
+je trim_found_{var}{tno}
+inc rsi
+loop trim_loop_{var}{tno}
+jmp trim_done_{var}{tno}
+trim_found_{var}{tno}:
+mov byte [rsi], 0
+trim_done_{var}{tno}:
+"""
+            tno += 1
+
+        elif cmd == "setchar":
+            string = int(parts[2])
+            var = parts[1]
+            cresult += f"""
+mov rax, {string}
+mov qword {variables[var][0]}, rax
+"""
+        elif cmd == "setvar":
+            var1 = parts[1]
+            var2 = parts[2]
+            cresult += f"""
+mov rax, {variables[var2][0]}
+mov qword {variables[var1][0]}, rax
+"""
+        elif cmd == "setvar*":
+            var1 = parts[1]
+            var2 = parts[2]
+            cresult += f"""
+lea rax, {variables[var2][1]}
+mov qword {variables[var1][0]}, rax
+"""
+        elif cmd == "end":
+            if parts[1] == "sub":
+                cresult += """
+ret
+"""
+            elif parts[1] == "if":
+                cif -= 1
+                mn = ifnol[cif]
+                result += f"""
+if_s{mn}:
+nop
+"""
+            elif parts[1] == "while":
+                cif -= 1
+                mn = ifnol[cif]
+                result += f"""
+jmp loopback_{mn}
+endloop_{mn}:
+nop
+"""
+            elif parts[1] == "program":
+                cresult += """
+mov rax, 60
+xor rdi, rdi
+syscall
+"""
+        elif cmd == "lastret":
+            var = parts[1]
+            cresult += f"""
+mov rax, [retval]
+mov qword {variables[var][0]}, rax
+"""
+        elif cmd == "echo":
+            value = []
+            typ = parts[1]
+            val = ' '.join(parts[2:]).replace("_", " ")
+            if typ == "bytes":
+                if not (val[0] == '"' and val[-1] == '"' or val in variables):
+                    raise SyntaxError("echo bytes requires quoted string")
+                elif val in variables:
+                    pass
+                elif intable(val):
+                    pass
+                else:
+                    val = val[1:]
+                    val = val[:-1]
+            value = string_to_hex_chunks(val, 4)
+            if intable(val):
+                value = [(int(val), int(val))]
+            if val in variables.keys():
+                value = [(variables[val][0], variables[val][2])]
+            for chunk in value:
+                if typ == "bytes":
+                    cresult += f"""
+mov rdx, {chunk[0]}
+mov qword [ech], rdx
+mov rsi, ech
+mov rdx, {chunk[1]}
+mov rax, 1
+mov rdi, 1
+syscall
+"""
+                elif typ == "int":
+                    cresult += f"""
+mov rax, {chunk[0]}
+call print_int
+"""
+        elif cmd == "nl":
+            cresult += """
+mov byte [ech], 0x0A
+mov rsi, ech
+mov rdx, 1
+mov rax, 1
+mov rdi, 1
+syscall
+"""
+        elif cmd in subs.keys():
+            for i in range(len(subs[cmd])):
+                v = ""
+                if parts[1+i] in variables.keys():
+                    v = variables[parts[1+i]][0]
+                elif intable(parts[1+i]):
+                    v = int(parts[i+1])
+                elif parts[i+1][0] == '"' and parts[i+1][-1] == '"':
+                    m = parts[i+1][1:]
+                    m = m[:-1]
+                    v = string_to_hex_chunks(v, len(v))[0]
+                elif parts[i+1][0] == "*":
+                    pass
+                if parts[i+1][0] != "*":
+                    cresult += f"""
+mov rax, {v}
+mov qword {subs[cmd][i]}, rax
+"""
+                elif parts[i+1][0] == "*":
+                    cresult += f"""
+lea rax, {variables[parts[i+1][1:]][1]}
+mov qword {subs[cmd][i]}, rax
+"""
+            cresult += f"""
+call {cmd}
+"""
+        elif cmd == "listen":
+            typ = parts[1]
+            buffer = parts[2]
+            if typ == "bytes":
+                cresult += f"""
+mov rax, 0
+mov rdi, 0
+mov rsi, {variables[buffer][1]}
+mov rdx, {variables[buffer][2]}
+syscall
+"""
+            elif typ == "int":
+                cresult += f"""
+lea rbx, {variables[buffer][1]}
+call read_int
+"""
+        elif cmd == "swap":
+            var = parts[1]
+            cresult += f"""
+mov rax, {variables[var][0]}
+bswap rax
+mov qword {variables[var][0]}, rax
+"""
+        elif cmd == "setop":
+            res = parts[1]
+            var1 = parts[2]
+            val1 = 0
+            if intable(var1):
+                val1 = int(var1)
+            else:
+                val1 = variables[var1][0]
+            op = parts[3]
+            var2 = parts[4]
+            val2 = 0
+            if intable(var2):
+                val2 = int(var2)
+            else:
+                val2 = variables[var2][0]
+            ops = {
+                "+":"add",
+                "-":"sub",
+                "*":"imul",
+                "/":"div"
+                }
+
+            if op in ["+", "-"]:
+                cresult = f"""
+mov rax, {val1}
+mov rbx, {val2}
+{ops[op]} rax, rbx
+mov {variables[res][0]}, rax
+        """
+            elif op == "*":
+                cresult = f"""
+mov rax, {val1}
+mov rbx, {val2}
+imul rax, rbx
+mov {variables[res][0]}, rax
+        """
+            elif op == "/":
+                cresult = f"""
+mov rax, {val1}
+xor rdx, rdx
+mov rbx, {val2}
+mov qword [garbage], rbx
+idiv qword [garbage]
+mov {variables[res][0]}, rax
+        """
+        
+        elif cmd == "while":
+            op = parts[2]
+            a = parts[1]
+            b = parts[3]
+            av = 0
+            bv = 0
+            if a in variables.keys():
+                av = variables[a][0]
+            elif intable(a):
+                av = int(a)
+            elif a[0] == '"' and a[-1] == '"':
+                m = a[1:]
+                m = m[:-1]
+                av = str(string_to_hex_chunks(m, 4)[0][0])
+
+            if b in variables.keys():
+                bv = variables[b][0]
+            elif intable(b):
+                bv = int(b)
+            elif b[0] == '"' and b[-1] == '"':
+                print(b)
+                m = b[1:]
+                m = m[:-1]
+                bv = str(string_to_hex_chunks(m, len(m))[0][0])
+            ops = {
+                "==": "jne",   # jump if NOT equal
+                "!=": "je",    # jump if equal
+                ">": "jle",    # jump if <= (so > does not jump)
+                "<": "jge",    # jump if >= (so < does not jump)
+                ">=": "jl",    # jump if < (so >= does not jump)
+                "<=": "jg",    # jump if > (so <= does not jump)
+            }
+            result += f"""
+loopback_{ifno}:
+mov rax, {av}
+mov rbx, {bv}
+cmp rax, rbx
+{ops[op]} endloop_{ifno}
+"""
+            ifnol[cif] = ifno
+            ifno += 1
+            cif += 1
+            if cif >= len(ifnol):
+                ifnol.append(0)
+
+        elif cmd == "zero":
+            var = parts[1]
+            cresult += f"""
+mov rax, {variables[var][0]}
+xor rax, rax
+mov qword {variables[var][0]}, rax
+"""
+        
+        elif cmd == "asm":
+            command = " ".join(parts[1:])
+            cresult += f"""{command}
+"""
+
+        elif cmd == "if":
+            op = parts[2]
+            a = parts[1]
+            b = parts[3]
+            av = 0
+            bv = 0
+            if a in variables.keys():
+                av = variables[a][0]
+            elif intable(a):
+                av = int(a)
+            elif a[0] == '"' and a[-1] == '"':
+                m = a[1:]
+                m = m[:-1]
+                av = str(string_to_hex_chunks(m, 4)[0][0])
+
+            if b in variables.keys():
+                bv = variables[b][0]
+            elif intable(b):
+                bv = int(b)
+            elif b[0] == '"' and b[-1] == '"':
+                m = b[1:]
+                m = m[:-1]
+                bv = str(string_to_hex_chunks(m, len(m))[0][0])
+            ops = {
+                "==": "jne",   # jump if NOT equal
+                "!=": "je",    # jump if equal
+                ">": "jle",    # jump if <= (so > does not jump)
+                "<": "jge",    # jump if >= (so < does not jump)
+                ">=": "jl",    # jump if < (so >= does not jump)
+                "<=": "jg",    # jump if > (so <= does not jump)
+            }
+            result += f"""
+mov rax, {av}
+mov rbx, {bv}
+cmp rax, rbx
+{ops[op]} if_s{ifno}
+"""
+            ifnol[cif] = ifno
+            ifno += 1
+            cif += 1
+            if cif >= len(ifnol):
+                ifnol.append(0)
+        elif cmd == "return":
+            value = parts[1]
+            if value:
+                if value in variables:
+                    cresult += f"""
+xor rax, rax
+mov qword [retval], rax
+mov rax, {variables[value][0]}
+mov qword [retval], rax
+ret
+"""
+                elif value[0] == '"' and value[-1] == '"':
+                    val = value[1:]
+                    val = val[:-1]
+                    valv = string_to_hex_chunks(val, 8)
+                    cresult += f"""
+mov rax, {valv[0][0]}
+mov [retval], rax
+ret
+"""
+                elif intable(value):
+                    cresult += f"""
+mov rax, {hex(int(value))}
+mov [retval], rax
+ret
+"""
+        elif cmd == "clean":
+            cresult += """
+xor rax, rax
+xor rbx, rbx
+xor rcx, rcx
+xor rdx, rdx
+"""
+        result += f"{cresult}\n"
+
+mode = 0
+
+if len(sys.argv) >= 3:
+    if sys.argv[2] == "--normal":
+        mode = 0
+    elif sys.argv[2] == "--extern":
+        mode = 1
+    elif sys.argv[2] == "--kernel":
+        mode = 2
+
+fresult = ""
+
+if mode == 0:
+    fresult = f"""
+section .data
+    ech dq 0, 0, 0, 0, 0, 0, 0, 0
+    garbage dq 0, 0, 0, 0, 0, 0, 0, 0
+    pa dq 0, 0, 0, 0, 0, 0, 0, 0
+    pb dq 0, 0, 0, 0, 0, 0, 0, 0
+    pc dq 0, 0, 0, 0, 0, 0, 0, 0
+    pd dq 0, 0, 0, 0, 0, 0, 0, 0
+    retval dq 0, 0, 0, 0, 0, 0, 0, 0
+    itov dq 0, 0, 0, 0
+    tempv0 dq 0, 0, 0, 0, 0, 0, 0, 0
+    tempv1 dq 0, 0, 0, 0, 0, 0, 0, 0
+    tempv2 dq 0, 0, 0, 0, 0, 0, 0, 0
+    tempv3 dq 0, 0, 0, 0, 0, 0, 0, 0
+    tempv4 dq 0, 0, 0, 0, 0, 0, 0, 0
+{vardata}
+
+section .text
+global _start
+
+
+; read integer
+read_int:
+    ; --- read from stdin ---
+    mov rax, 0              ; SYS_read
+    mov rdi, 0              ; stdin
+    lea rsi, [itov]
+    mov rdx, 32
+    syscall
+
+    ; --- parse ASCII → integer ---
+    xor rcx, rcx            ; accumulator = 0
+    lea rsi, [itov]
+
+.parse_loop:
+    mov al, [rsi]
+    cmp al, 0x0A            ; newline?
+    je .done
+    cmp al, 0               ; null?
+    je .done
+
+    sub al, '0'
+    cmp al, 9
+    ja .done                ; non-digit, stop
+
+    imul rcx, rcx, 10
+    movzx rax, al
+    add rcx, rax
+
+    inc rsi
+    jmp .parse_loop
+
+.done:
+    mov [rbx], rcx
+    ret
+
+; print integer
+print_int:
+    ; --- convert int → ASCII (itoa) ---
+    lea rdi, [itov + 31]     ; write backwards
+    mov byte [rdi], 0
+    dec rdi
+
+    cmp rax, 0
+    jne .conv
+    mov byte [rdi], '0'
+    jmp .done_conv
+
+.conv:
+    mov rbx, 10
+.conv_loop:
+    xor rdx, rdx
+    div rbx                 ; rax /= 10, rdx = digit
+    add dl, '0'
+    mov [rdi], dl
+    dec rdi
+    test rax, rax
+    jne .conv_loop
+
+.done_conv:
+    inc rdi                 ; rdi = start of string
+
+    ; --- compute length ---
+    mov rsi, rdi
+    xor rcx, rcx
+.len_loop:
+    cmp byte [rsi + rcx], 0
+    je .len_done
+    inc rcx
+    jmp .len_loop
+.len_done:
+
+    ; --- write(stdout, string, len) ---
+    mov rax, 1              ; SYS_write
+    mov rdi, 1              ; stdout
+    mov rdx, rcx            ; length
+    syscall
+    ret
+
+{result}
+
+_start:
+    call main
+    mov rax, 60
+    xor rdi, rdi
+    syscall"""
+
+elif mode == 1:
+    import json
+
+    # Prepare library dict
+    lib_dict = {
+        "subs": subs,        # dict of subs and their parameters
+        "vars": variables,   # dict of variables and their info
+        "ifno": ifno,        # current if/jump counter
+        "code": result,      # all the compiled code (after translation)
+        "vardata": vardata   # the .data section needed for this lib
+    }
+
+    # Ask user for output file name
+    lib_name = "library.xlib"
+    if len(sys.argv) >= 4:
+        lib_name = sys.argv[3]
+
+    with open(lib_name, "w") as f:
+        json.dump(lib_dict, f, indent=4)
+
+    print(f"Library written to {lib_name}")
+    sys.exit(0)
+
+elif mode == 2:
+    fresult = f"""
+BITS 64
+section .bss
+    ech     resq 8
+    garbage resq 8
+    pa      resq 8
+    pb      resq 8
+    pc      resq 8
+    pd      resq 8
+    retval  resq 1
+    itov    resq 4
+    tempv0  resq 8
+    tempv1  resq 8
+    tempv2  resq 8
+    tempv3  resq 8
+    tempv4  resq 8
+section .data
+{vardata}
+
+section .text
+global _start
+
+
+; read integer
+read_int:
+    ; --- read from stdin ---
+    mov rax, 0              ; SYS_read
+    mov rdi, 0              ; stdin
+    lea rsi, [itov]
+    mov rdx, 32
+    syscall
+
+    ; --- parse ASCII → integer ---
+    xor rcx, rcx            ; accumulator = 0
+    lea rsi, [itov]
+
+.parse_loop:
+    mov al, [rsi]
+    cmp al, 0x0A            ; newline?
+    je .done
+    cmp al, 0               ; null?
+    je .done
+
+    sub al, '0'
+    cmp al, 9
+    ja .done                ; non-digit, stop
+
+    imul rcx, rcx, 10
+    movzx rax, al
+    add rcx, rax
+
+    inc rsi
+    jmp .parse_loop
+
+.done:
+    mov [rbx], rcx
+    ret
+
+; print integer
+print_int:
+    ; --- convert int → ASCII (itoa) ---
+    lea rdi, [itov + 31]     ; write backwards
+    mov byte [rdi], 0
+    dec rdi
+
+    cmp rax, 0
+    jne .conv
+    mov byte [rdi], '0'
+    jmp .done_conv
+
+.conv:
+    mov rbx, 10
+.conv_loop:
+    xor rdx, rdx
+    div rbx                 ; rax /= 10, rdx = digit
+    add dl, '0'
+    mov [rdi], dl
+    dec rdi
+    test rax, rax
+    jne .conv_loop
+
+.done_conv:
+    inc rdi                 ; rdi = start of string
+
+    ; --- compute length ---
+    mov rsi, rdi
+    xor rcx, rcx
+.len_loop:
+    cmp byte [rsi + rcx], 0
+    je .len_done
+    inc rcx
+    jmp .len_loop
+.len_done:
+
+    ; --- write(stdout, string, len) ---
+    mov rax, 1              ; SYS_write
+    mov rdi, 1              ; stdout
+    mov rdx, rcx            ; length
+    syscall
+    ret
+
+{result}
+"""
+    with open("output.asm", 'w') as f:
+        f.write(fresult)
+    os.system(f"""
+nasm -f bin output.asm -o kernel.bin
+qemu-system-x86_64 -drive format=raw,file=kernel.bin
+    """)
+    sys.exit(0)
+
+with open("output.asm", 'w') as f:
+    f.write(fresult)
+
+os.system(f"""
+nasm -f elf64 output.asm && ld output.o -o {ofile}
+""")

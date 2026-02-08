@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+import os
+path = "/usr/local/lib/carbunlibs"
+
+libs = {
+    "returntest.l":{
+    "subs": {
+        "testret": []
+    },
+    "vars": {
+        "retval": [
+            "[retval]",
+            "retval",
+            8
+        ]
+    },
+    "ifno": 0,
+    "code": "testret:\n\nmov rax, 26984\nmov [retval], rax\nret\n\n\nret\n\n",
+    "vardata": ""
+    },
+    "ioutils.l":{
+    "subs": {
+        "print_uint": [
+            "[pa]"
+        ],
+        "print_uint_w0": [
+            "[pa]"
+        ],
+        "read_bytes_trim": [
+            "[pa]",
+            "[pb]"
+        ],
+        "print_array": [
+            "[pa]",
+            "[pb]"
+        ]
+    },
+    "vars": {
+        "tempv0": [
+            "[tempv0]",
+            "tempv0",
+            8
+        ],
+        "tempv1": [
+            "[tempv1]",
+            "tempv1",
+            8
+        ],
+        "tempv2": [
+            "[tempv2]",
+            "tempv2",
+            8
+        ],
+        "tempv3": [
+            "[tempv3]",
+            "tempv3",
+            8
+        ],
+        "tempv4": [
+            "[tempv4]",
+            "tempv4",
+            8
+        ],
+        "internal": [
+            "[internal_v]",
+            "internal_v",
+            8
+        ],
+        "val": [
+            "[pb]",
+            "pb",
+            8
+        ],
+        "pointer": [
+            "[pa]",
+            "pa",
+            8
+        ],
+        "num_items": [
+            "[pb]",
+            "pb",
+            8
+        ]
+    },
+    "ifno": 5,
+    "code": "\nprint_uint:\n\nmov rax, [pa]\ncall print_int\n\n\nret\n\nprint_uint_w0:\n\nmov rax, [pa]\nmov rbx, 0\ncmp rax, rbx\nje if_s0\n\n\nmov rax, [pa]\ncall print_int\n\n\nif_s0:\nnop\n\n\nmov rax, [pa]\nmov rbx, 0\ncmp rax, rbx\njne if_s1\n\n\nmov rdx, 48\nmov qword [ech], rdx\nmov rsi, ech\nmov rdx, 4\nmov rax, 1\nmov rdi, 1\nsyscall\n\n\nif_s1:\nnop\n\n\nret\n\nread_bytes_trim:\n\nmov rax, 0\nmov rdi, 0\nmov rsi, internal_v\nmov rdx, 8\nsyscall\n\n\n; trim newline from internal\nlea rsi, [internal_v]\nmov rcx, 8\ntrim_loop_internal0:\nmov al, [rsi]\nmov rbx, [pb]\ncmp al, bl\nje trim_found_internal0\ninc rsi\nloop trim_loop_internal0\njmp trim_done_internal0\ntrim_found_internal0:\nmov byte [rsi], 0\ntrim_done_internal0:\n\nmov rax, [internal_v]\n\nmov rbx, [pa]\n\nmov qword [rbx], rax\n\n\nret\n\nprint_array:\n\nmov rax, 0\nmov qword [tempv0], rax\n\n\nmov rax, 0\nmov qword [tempv1], rax\n\n\nloopback_2:\nmov rax, [tempv0]\nmov rbx, [pb]\ncmp rax, rbx\njge endloop_2\n\nmov rbx, [pa]\n\nmov rax, [tempv0]\n\nmov rdx, [rbx+rax*8]\n\nmov qword [tempv1], rdx\n\n\nmov rax, [tempv1]\ncall print_int\n\n\nmov rax, [pb]\nmov rbx, 2\nsub rax, rbx\nmov [tempv2], rax\n        \n\nmov rax, [tempv0]\nmov rbx, [tempv2]\ncmp rax, rbx\njg if_s3\n\n\nmov rax, [tempv1]\nmov rbx, 0\ncmp rax, rbx\nje if_s4\n\n\nmov rdx, 8236\nmov qword [ech], rdx\nmov rsi, ech\nmov rdx, 4\nmov rax, 1\nmov rdi, 1\nsyscall\n\n\nif_s4:\nnop\n\n\nif_s3:\nnop\n\n\nmov rax, [tempv0]\nmov rbx, 1\nadd rax, rbx\nmov [tempv0], rax\n        \n\njmp loopback_2\nendloop_2:\nnop\n\n\nret\n\n",
+    "vardata": "\n    internal_v dq 0x0000000000000000\n"
+    },
+    "mathutils.l":{
+    "subs": {
+        "sqr": [
+            "[pa]",
+            "[pb]"
+        ],
+        "cube": [
+            "[pa]",
+            "[pb]"
+        ],
+        "mean": [
+            "[pa]",
+            "[pb]",
+            "[pc]"
+        ]
+    },
+    "vars": {
+        "tempv0": [
+            "[tempv0]",
+            "tempv0",
+            8
+        ],
+        "tempv1": [
+            "[tempv1]",
+            "tempv1",
+            8
+        ],
+        "tempv2": [
+            "[tempv2]",
+            "tempv2",
+            8
+        ],
+        "tempv3": [
+            "[tempv3]",
+            "tempv3",
+            8
+        ],
+        "val": [
+            "[pa]",
+            "pa",
+            8
+        ],
+        "res": [
+            "[pb]",
+            "pb",
+            8
+        ],
+        "pointer": [
+            "[pa]",
+            "pa",
+            8
+        ],
+        "valpointer": [
+            "[pb]",
+            "pb",
+            8
+        ],
+        "numno": [
+            "[pc]",
+            "pc",
+            8
+        ]
+    },
+    "ifno": 1,
+    "code": "sqr:\nmov rax, [pa]\n\nmov rbx, [pb]\n\nimul rax, rax\n\nmov qword [rbx], rax\n\n\nret\n\ncube:\nmov rax, [pa]\n\nmov rbx, [pb]\n\nimul rax, rax\n\nimul rax, [pa]\n\nmov qword [rbx], rax\n\n\nret\n\nmean:\n\nmov rax, 0\nmov qword [tempv0], rax\n\n\nmov rax, 0\nmov qword [tempv1], rax\n\n\nloopback_0:\nmov rax, [tempv0]\nmov rbx, [pc]\ncmp rax, rbx\njge endloop_0\n\nmov rbx, [tempv0] ; use loop index, not sum\n\nmov rcx, [pb] ; base pointer\n\nmov rax, [tempv1] ; current sum\n\nadd rax, [rcx + rbx*8] ; qword indexing\n\nmov qword [tempv1], rax\n\n\nmov rax, [tempv0]\nmov rbx, 1\nadd rax, rbx\nmov [tempv0], rax\n        \n\njmp loopback_0\nendloop_0:\nnop\n\n\nmov rax, [tempv1]\nxor rdx, rdx\nmov rbx, [pc]\nmov qword [garbage], rbx\nidiv qword [garbage]\nmov [tempv1], rax\n        \nmov rbx, [pa]\n\nmov rax, [tempv1]\n\nmov qword [rbx], rax\n\n\nret\n\n",
+    "vardata": ""
+    },
+    "byteutils.l":{
+    "subs": {
+        "push": [
+            "[pa]",
+            "[pb]",
+            "[pc]"
+        ],
+        "read_byte": [
+            "[pa]",
+            "[pb]",
+            "[pc]"
+        ],
+        "chck_byte": [
+            "[pa]",
+            "[pb]",
+            "[pc]"
+        ]
+    },
+    "vars": {
+        "tempv0": [
+            "[tempv0]",
+            "tempv0",
+            8
+        ],
+        "tempv1": [
+            "[tempv1]",
+            "tempv1",
+            8
+        ],
+        "tempv2": [
+            "[tempv2]",
+            "tempv2",
+            8
+        ],
+        "tempv3": [
+            "[tempv3]",
+            "tempv3",
+            8
+        ],
+        "pointer": [
+            "[pa]",
+            "pa",
+            8
+        ],
+        "index": [
+            "[pb]",
+            "pb",
+            8
+        ],
+        "byte": [
+            "[pc]",
+            "pc",
+            8
+        ],
+        "result": [
+            "[pc]",
+            "pc",
+            8
+        ]
+    },
+    "ifno": 0,
+    "code": "push:\nmov rax, [pc] ; value\n\nmov rbx, [pa] ; base pointer\n\nmov rcx, [pb] ; index\n\nmov [rbx + rcx*8], rax ; store qword\n\n\nret\n\nread_byte:\nmov rbx, [pa]\n\nmov rax, [pb]\n\nmov al, [rbx+rax]\n\nmov rbx, [pc]\n\nmov byte [rbx], al\n\n\nret\n\nchck_byte:\nmov rdx, [pa]\n\nmov rcx, [pb]\n\nmov al, [rdx+rcx]\n\nmov rbx, [pc]\n\ncmp al, bl\n\njne skip_chck\n\n\nmov rax, 0x1\nmov [retval], rax\nret\n\nskip_chck:\n\n\nmov rax, 0x0\nmov [retval], rax\nret\n\n\nret\n\n",
+    "vardata": ""
+    },
+    "bareutils.l":{
+    "subs": {
+        "vga_write": [
+            "[pa]",
+            "[pb]"
+        ]
+    },
+    "vars": {
+        "tempv0": [
+            "[tempv0]",
+            "tempv0",
+            8
+        ],
+        "tempv1": [
+            "[tempv1]",
+            "tempv1",
+            8
+        ],
+        "tempv2": [
+            "[tempv2]",
+            "tempv2",
+            8
+        ],
+        "tempv3": [
+            "[tempv3]",
+            "tempv3",
+            8
+        ],
+        "tempv4": [
+            "[tempv4]",
+            "tempv4",
+            8
+        ],
+        "port": [
+            "[pa]",
+            "pa",
+            8
+        ],
+        "byte": [
+            "[pb]",
+            "pb",
+            8
+        ]
+    },
+    "ifno": 0,
+    "code": "vga_write:\nmov dx, word [pa] ; port number (16-bit)\n\nmov al, byte [pb] ; value (8-bit)\n\nout dx, al\n\n\nret\n\n",
+    "vardata": ""
+    }
+}
+os.makedirs("/usr/local/lib/carbunlibs", exist_ok=True)
+for lib in libs.keys():
+    with open(os.path.join(path, lib), 'w') as f:
+        f.write(str(libs[lib]))
