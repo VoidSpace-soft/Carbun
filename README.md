@@ -137,3 +137,4 @@ end sub
 
 # Fix reports
 v1.1lerbb: Fixed array memorey leak.
+v1.2lerbb: Fixe byteutils.l
