@@ -49,9 +49,15 @@ the `nl` command prints a newline. <br>
 
 ### Variables
 There are 3 types of variables: quadword, bytes and arrays.<br>
-to define a quadword you can use `var <varname>`. <br>
-to define a byte you can use `byte <bytename>`. <br>
-to define an array you can use `var <name> [size]`. <br>
+To define a quadword you can use `var <varname>`. <br>
+To define a byte you can use `byte <bytename>`. <br>
+To define an array you can use `var <name> [size]`. <br>
+
+To set variable value you can use these: <br>
+`setstr <var> "value"` : sets variable value to a string, max 8 bytes. <br>
+`setchar <var> 256` : sets variable value to an integer, max 8 bytes. <br>
+`setvar <var> <var2>` : copies value of one variable to another. <br>
+`setvar* <var> <var2>` : sets variable value to address if a variable. currently useless when using non builtin functions. <br>
 
 ### Libraries
 In carbun you can import libraries using the `#using` command, like: <br>
