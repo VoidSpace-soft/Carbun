@@ -81,10 +81,25 @@ If conditions use the `if` command in carbun. you can use them like this:
 
 var inp
 sub main
-  read_bytes_trim inp 10
+  read_bytes_trim *inp 10
   if inp == "Hello"
     echo bytes "Hello"
   end if
+end sub
+```
+
+### While loops
+While loops are defined using `while` command. with syntax `while <val1> <op> <val2>...end while`. example: <br>
+```
+#using <ioutils.l>
+
+var x
+
+sub main
+  while x != "exit":
+    echo bytes "> "
+    read_bytes_trim *x 10
+  end while
 end sub
 ```
 
