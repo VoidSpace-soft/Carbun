@@ -53,7 +53,7 @@ if len(sys.argv) < 2:
     print("usage compile <file> <subcommand/output>")
     sys.exit(0)
 elif sys.argv[1] == "--version":
-    print("Carbun v1.0ler-bb.")
+    print("Carbun v1.1ler-bb.")
     print("Under testing, unstable")
     sys.exit(0)
 
