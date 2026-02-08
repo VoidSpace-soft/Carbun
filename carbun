@@ -140,7 +140,7 @@ for line in fl.split("\n"):
                 variables[parts[1]] = (f"[{parts[1]}_v]", parts[1]+"_v", 8)
             elif m:
                 vardata += f"""
-    {parts[1]}_a dq 0x{"00"*n}
+    {parts[1]}_a dq 0{", 0"*(n-1)}
 """
                 variables[parts[1]] = (f"[{parts[1]}_a]", parts[1]+"_a", 8)
         elif cmd == "byte":
