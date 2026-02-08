@@ -57,7 +57,7 @@ To set variable value you can use these: <br>
 `setstr <var> "value"` : sets variable value to a string, max 8 bytes. <br>
 `setchar <var> 256` : sets variable value to an integer, max 8 bytes. <br>
 `setvar <var> <var2>` : copies value of one variable to another. <br>
-`setvar* <var> <var2>` : sets variable value to address if a variable. currently useless when using non builtin functions. <br>
+`setvar* <var> <var2>` : sets variable value to address if a variable. currently useless when using non-builtin functions. <br>
 
 ### Libraries
 In carbun you can import libraries using the `#using` command, like: <br>
@@ -110,7 +110,7 @@ sub mysub
   asm nop
 end sub
 ```
-to exit a subroutine mid way you can use `end sub`, to exit while returning a value you can use `return <val>`, and you can use `lastret <var>` to store that value to a variable. example: <br>
+to exit a subroutine midway you can use `end sub`, to exit while returning a value you can use `return <val>`, and you can use `lastret <var>` to store that value to a variable. example: <br>
 ```
 sub test
   return "hi"
