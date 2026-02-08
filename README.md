@@ -103,6 +103,9 @@ sub main
 end sub
 ```
 
+### Assembly in carbun???
+Yes. you read that right, in carbun you can use the `asm` command to run assembly, like `asm xor rax, rax`. <br>
+
 ### Subroutines
 to define a subroutine you can use `sub <name>...end sub` syntax. like: <br>
 ```
