@@ -133,3 +133,6 @@ end sub
 - `echo int` cannot print if value = 0. use `print_uint_w0` from ioutils.l for that instead.
 - `listen bytes` returns byte 10 (newline) with the result
 - `echo bytes` and `listen bytes` can take up space in final result due to them being inlines.
+
+# Fix reports
+v1.1lerbb: Fixed array memorey leak.
