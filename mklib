@@ -160,12 +160,12 @@ libs = {
             "[pb]",
             "[pc]"
         ],
-        "read_byte": [
+        "read_bytes": [
             "[pa]",
             "[pb]",
             "[pc]"
         ],
-        "chck_byte": [
+        "chck_bytes": [
             "[pa]",
             "[pb]",
             "[pc]"
@@ -192,6 +192,11 @@ libs = {
             "tempv3",
             8
         ],
+        "tempv4": [
+            "[tempv4]",
+            "tempv4",
+            8
+        ],
         "pointer": [
             "[pa]",
             "pa",
@@ -214,7 +219,7 @@ libs = {
         ]
     },
     "ifno": 0,
-    "code": "push:\nmov rax, [pc] ; value\n\nmov rbx, [pa] ; base pointer\n\nmov rcx, [pb] ; index\n\nmov [rbx + rcx*8], rax ; store qword\n\n\nret\n\nread_byte:\nmov rbx, [pa]\n\nmov rax, [pb]\n\nmov al, [rbx+rax]\n\nmov rbx, [pc]\n\nmov byte [rbx], al\n\n\nret\n\nchck_byte:\nmov rdx, [pa]\n\nmov rcx, [pb]\n\nmov al, [rdx+rcx]\n\nmov rbx, [pc]\n\ncmp al, bl\n\njne skip_chck\n\n\nmov rax, 0x1\nmov [retval], rax\nret\n\nskip_chck:\n\n\nmov rax, 0x0\nmov [retval], rax\nret\n\n\nret\n\n",
+    "code": "push:\nmov rax, [pc] ; value\n\nmov rbx, [pa] ; base pointer\n\nmov rcx, [pb] ; index\n\nmov [rbx + rcx*8], rax ; store qword\n\n\nret\n\nread_bytes:\nmov rbx, [pa]\n\nmov rax, [pb]\n\nmov rdx, [rbx+rax*8]\n\nmov rbx, [pc]\n\nmov qword [rbx], rdx\n\n\nret\n\nchck_bytes:\nmov rdx, [pa]\n\nmov rcx, [pb]\n\nmov rex, [rdx+rcx*8]\n\nmov rbx, [pc]\n\ncmp rex, rbx\n\njne skip_chck\n\n\nmov rax, 0x1\nmov [retval], rax\nret\n\nskip_chck:\n\n\nmov rax, 0x0\nmov [retval], rax\nret\n\n\nret\n\n",
     "vardata": ""
     },
     "bareutils.l":{

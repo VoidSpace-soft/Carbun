@@ -53,7 +53,7 @@ if len(sys.argv) < 2:
     print("usage compile <file> <subcommand/output>")
     sys.exit(0)
 elif sys.argv[1] == "--version":
-    print("Carbun v1.1ler-bb.")
+    print("Carbun v1.0ler-bb.")
     print("Under testing, unstable")
     sys.exit(0)
 
@@ -532,20 +532,21 @@ fresult = ""
 
 if mode == 0:
     fresult = f"""
+section .bss
+    ech resq 1
+    garbage resq 1
+    pa resq 1
+    pb resq 1
+    pc resq 1
+    pd resq 1
+    retval resq 1
+    itov resq 1
+    tempv0 resq 1
+    tempv1 resq 1
+    tempv2 resq 1
+    tempv3 resq 1
+    tempv4 resq 1
 section .data
-    ech dq 0, 0, 0, 0, 0, 0, 0, 0
-    garbage dq 0, 0, 0, 0, 0, 0, 0, 0
-    pa dq 0, 0, 0, 0, 0, 0, 0, 0
-    pb dq 0, 0, 0, 0, 0, 0, 0, 0
-    pc dq 0, 0, 0, 0, 0, 0, 0, 0
-    pd dq 0, 0, 0, 0, 0, 0, 0, 0
-    retval dq 0, 0, 0, 0, 0, 0, 0, 0
-    itov dq 0, 0, 0, 0
-    tempv0 dq 0, 0, 0, 0, 0, 0, 0, 0
-    tempv1 dq 0, 0, 0, 0, 0, 0, 0, 0
-    tempv2 dq 0, 0, 0, 0, 0, 0, 0, 0
-    tempv3 dq 0, 0, 0, 0, 0, 0, 0, 0
-    tempv4 dq 0, 0, 0, 0, 0, 0, 0, 0
 {vardata}
 
 section .text
