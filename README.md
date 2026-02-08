@@ -1,6 +1,6 @@
 ## What is Carbun?
 Carbun is a kind of low level compiled programming langauge made using python. it currently supports x86_64 linux. It is fully opensource. <br>
----
+
 ## Syntax
 ### Basics
 Carbun has very simple syntax. the carbun file can have anyy extension. when compiling for OS level there must be a mandatory main subroutine like this: <br>
@@ -9,7 +9,7 @@ sub main
   asm nop
 end sub
 ```
----
+
 ### I/O
 To print a string you can use `echo bytes <bytes>` like: <br>
 ```
@@ -44,13 +44,15 @@ sub main
   echo int x
 end sub
 ```
----
+
+the `nl` command prints a newline.
+
 ### Variables
 There are 3 types of variables: quadword, bytes and arrays.<br>
 to define a quadword you can use `var <varname>`. <br>
 to define a byte you can use `byte <bytename>`. <br>
 to define an array you can use `var <name> [size]`. <br>
----
+
 ### Libraries
 In carbun you can import libraries using the `#using` command, like: <br>
 ```
@@ -65,7 +67,7 @@ some libraries: <br>
 `byteutils.l`: gives functions for arrays like `push *<array-name> <index> <byte>` and others.
 `bareutils.l`: gives VGA Write function, still under testing.
 `mathutils.l`: gives functions like `sqr *<result-var> <value>`, `cube *<result-var> <value>` and `mean *<result-name> *<array-name> <num-of-observations>`
----
+
 ### If condition
 If conditions use the `if` command in carbun. you can use them like this:
 ```
@@ -79,3 +81,31 @@ sub main
   end if
 end sub
 ```
+
+### Subroutines
+to define a subroutine you can use `sub <name>...end sub` syntax. like: <br>
+```
+sub mysub
+  asm nop
+end sub
+```
+to exit a subroutine mid way you can us `end sub`, to exit while returning a vlue you can use `return <val>`, and you can use `lastret <var>` to store that value to a variable. example: <br>
+```
+sub test
+  return "hi"
+end sub
+
+var x
+
+sub main
+  test
+  lastret x
+  echo bytes x
+  nl
+end sub
+```
+
+### Bugs and warnings report.
+- `echo int` cannot print if value = 0. use `print_uint_w0` from ioutils.l for that instead.
+- `listen bytes` returns byte 10 (newline) with the result
+- `echo bytes` and `listen bytes` can take up space in final result due to them being inlines.
