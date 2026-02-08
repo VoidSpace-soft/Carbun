@@ -58,6 +58,7 @@ To set variable value you can use these: <br>
 `setchar <var> 256` : sets variable value to an integer, max 8 bytes. <br>
 `setvar <var> <var2>` : copies value of one variable to another. <br>
 `setvar* <var> <var2>` : sets variable value to address if a variable. currently useless when using non-builtin functions. <br>
+`setop <var> <val1> <op> <val2>` : sets variable value to value 1 operated by value 2. operations include +, -, / and *.
 
 ### Libraries
 In carbun you can import libraries using the `#using` command, like: <br>
