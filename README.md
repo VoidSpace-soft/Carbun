@@ -51,11 +51,13 @@ the `nl` command prints a newline. <br>
 There are 3 types of variables: quadword, bytes and arrays.<br>
 To define a quadword you can use `var <varname>`. <br>
 To define a byte you can use `byte <bytename>`. <br>
-To define an array you can use `var <name> [size]`. <br>
+To define a var array you can use `var <name> [size]`. <br>
+To define a byte array you can use `byte <name> [size]`. <br>
 
 To set variable value you can use these: <br>
 `setstr <var> "value"` : sets variable value to a string, max 8 bytes. <br>
-`setchar <var> 256` : sets variable value to an integer, max 8 bytes. <br>
+`setint <var> 256` : sets variable value to an integer, max 8 bytes. <br>
+`setchar <var> 255` : sets byte value to a byte, max 8 bit. <br>
 `setvar <var> <var2>` : copies value of one variable to another. <br>
 `setvar* <var> <var2>` : sets variable value to address if a variable. currently useless when using non-builtin functions. <br>
 `setop <var> <val1> <op> <val2>` : sets variable value to value 1 operated by value 2. operations include +, -, / and *.
@@ -70,8 +72,8 @@ sub main
 end sub
 ```
 some libraries: <br>
-`ioutils.l`: gives I/O helpers like `print_uint <val>`, `print_uint_w0 <val>` and `read_bytes_trim *<varname> <byte-to-trim>`. <br>
-`byteutils.l`: gives functions for arrays like `push *<array-name> <index> <byte>` and others. <br>
+`ioutils.l`: gives I/O helpers like `print_uint <val>`, `print_uint_w0 <val>`, `read_bytes_trim *<varname> <byte-to-trim>`, `print_int_array *<arrayname> <arraysize>`, `print_bytes_array *<arrayname> <arraysize>` and `print_byte_array *<arrayname> <arraysize>`. <br>
+`byteutils.l`: gives functions for arrays like `push_bytes *<array-name> <index> <byte>` and others. <br>
 `bareutils.l`: gives VGA Write function, still under testing. <br>
 `mathutils.l`: gives functions like `sqr <value> *<result-var>`, `cube <value> *<result-var>` and `mean *<result-name> *<array-name> <num-of-observations>`. <br>
 
@@ -136,5 +138,10 @@ end sub
 - `echo bytes` and `listen bytes` can take up space in final result due to them being inlines.
 
 # Fix reports
-v1.1lerbb: Fixed array memorey leak.
-v1.2lerbb: Fixe byteutils.l
+v1.1lerbb: Fixed array memorey leak. <br>
+v1.2lerbb: Fixed byteutils.l. <br>
+v1,3lerab: Made byte arrays. fixed a few functions. removed `check_bytes` from `byteutils.l`. made a highlighter extension for VSCode
+
+# Install and Setup
+### Debian/Ubuntu
+You can download the .deb given here and use `sudo apt` to install. after wards do `sudo mklib` to initialize the libraries. they after writing a script you can do `carbun <infile>.cb <output>` and then do `./<output>`
